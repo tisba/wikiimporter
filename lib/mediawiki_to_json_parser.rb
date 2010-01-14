@@ -1,23 +1,23 @@
 class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
     def initialize(max_chunk_size, max_pages = -1)
       @page_count = 0
-      
+
       @state = :page
-      
+
       @text = ""
       @chunk_size = 0
       @bundle_fd = nil
-      
+
       @max_chunk_size = max_chunk_size
       @max_pages = max_pages
     end
-     
+
     def start_element(name, attributes)
       if name == "page"
         abort_check if @max_pages > 0
         start_article
-      end    
-  
+      end
+
       if name == "title"
         @state = :title
       end
@@ -31,7 +31,7 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
         @state = :timestamp
       end
     end
-  
+
     def end_element(name)
       end_article if name == "page"
 
@@ -43,8 +43,8 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
         @text = ""
         @state = :page
       end
-    end     
-  
+    end
+
     def characters(data)
       case @state
       when :timestamp
@@ -65,7 +65,7 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
     end
 
     def start_article
-      @page_count = @page_count + 1 
+      @page_count = @page_count + 1
 
       start_bundle if @bundle_fd.nil?
       @bundle_fd << "," if @chunk_size > 0
@@ -98,5 +98,5 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
         end_bundle
         exit
       end
-    end 
+    end
 end

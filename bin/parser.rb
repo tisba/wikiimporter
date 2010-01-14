@@ -8,7 +8,7 @@ require "rubygems"
 require "nokogiri"
 require "yajl"
 
-require "lib/mediawiki_to_json_parser"
+require "../lib/mediawiki_to_json_parser"
 
 input_file = "data/dewiki-20091223-pages-articles.xml"
 max_chunk_size = 1_000
