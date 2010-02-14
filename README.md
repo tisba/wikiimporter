@@ -9,8 +9,14 @@ Type...
 
     bzcat data/dewiki-latest-pages-articles.xml.bz2 | ruby bin/wikixml2json.rb -- 1_000_000 100_000 -- | ./bin/couch_upload.rb
 
+get the latest dump
+
+    curl `ruby bin/getlatestdumpurl.rb` -O
+
+
+    time find data_bundles -name \*json -exec curl -\# -w "%{time_total} sec" -T {} -X POST http://localhost:5984/wikicouch/_bulk_docs > couch_upload.log \;
+
 # TODOs
 - Add options to Scripts :)
   - Couch-URL
-  - Make bulk_doc-bundle size configureable
-  - Skip-DL, give direct input XML
+
