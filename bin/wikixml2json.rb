@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 
 # Copyright (c) 2010 Sebastian Cohnen
 # 
@@ -54,7 +54,6 @@ if input_file == "--"
 else
   log "Input #{input_file}"
 end
-
 
 log "Trying to limit size of chunks to #{max_chunk_size} bytes"
 log "Using output schema #{bundle_output}"

@@ -22,8 +22,6 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
     def initialize(logger, max_chunk_size, max_pages = -1, bundle_output = nil)
       @page_count = 0
 
-      @state = :page
-
       @text = ""
       @chunk_page_count = 0
       
@@ -35,59 +33,56 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
       @max_pages = max_pages
       
       @logger = logger   
+      
+      @element_path = []
     end
 
 
     def start_element(name, attributes)
-      case name
-      when "page"
+      @element_path << name
+      
+      if @element_path.last == "page"
         abort_check if @max_pages > 0
         start_article
-      when "title"
-        @state = :title
-      when "id"
-        @state = :page_id if @state == :after_title
-      when "text"
-        @state = :text
-      when "timestamp"
-        @state = :timestamp
+        @article_id = nil
       end
+      
+      @char_buffer = ""
     end
 
     def end_element(name)
-      case name
-      when "page"
-        end_article
-      when "text"
-        @output << '"text": ' << Yajl::Encoder.encode(@text)
-
-        @text = ""
-        @state = :page
+      end_article if @element_path.last == "page"
+      
+      if @element_path.last == "text"
+        @output << '"text": ' << Yajl::Encoder.encode(@char_buffer)
+    
+        @char_buffer = ""
       end
+
+      @element_path.pop
     end
 
     def characters(data)
-      case @state
-      when :timestamp
-        @output << '"timestamp": "' << data << '",'
-        @state = :page
-      when :page_id
-        @output << '"_id": "' << data << '",'
-        @state = :page
-      when :title
+      case @element_path
+      when ["mediawiki", "page", "id"]
+        @article_id = data
+      when ["mediawiki", "page", "title"]
         @output << '"title": ' << Yajl::Encoder.encode(data) << ','
-        @state = :after_title
-      when :text
-       @text << data
+      when ["mediawiki", "page", "revision", "timestamp"]
+        @output << '"timestamp": "' << data << '",'
+      when ["mediawiki", "page", "revision", "id"]
+        @output << '"_id": "' << @article_id << "-" << data << '",'
+        @output << '"revision_id": "' << data << '",'
+      when ["mediawiki", "page", "revision", "text"]
+        @char_buffer << data
       end
     end
-
 
 
     def start_article
       @page_count = @page_count + 1
 
-      start_bundle if @output.nil? #|| @state == :closed_bundle
+      start_bundle if @output.nil?
       @output << "," if @chunk_page_count > 0 && @bundle_output != "--"
       @output << "{"
     end
@@ -115,13 +110,13 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
       @chunk_page_count = 0
     end
     def end_bundle
-      return if @output.nil? || @output.closed? || @state == :closed_bundle
+      return if @output.nil? || @output.closed? #|| @state == :closed_bundle
       @output << ']}'
       @chunk_page_count = 0
 
       if @bundle_output == "--"
         @output << "\n"
-        @state = :closed_bundle
+        # @state = :closed_bundle
       else
         @output.close
         @output = nil
@@ -134,7 +129,6 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
 
 
     def abort_check
-      return if @state == :skipping
       if @page_count >= @max_pages
         end_bundle unless @bundle_output == "--"
         exit
