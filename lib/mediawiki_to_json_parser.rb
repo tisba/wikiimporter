@@ -51,34 +51,42 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
     end
 
     def end_element(name)
-      end_article if @element_path.last == "page"
-      
-      if @element_path.last == "text"
+      case @element_path
+      when ["mediawiki", "page"]
+        end_article
+        
+      when ["mediawiki", "page", "id"]
+        @article_id = @char_buffer
+        @output << '"page_id": "' << @char_buffer << '",'
+        # @output << '"_id": "' << @char_buffer << '",'
+
+      when ["mediawiki", "page", "title"]
+        @output << '"title": ' << Yajl::Encoder.encode(@char_buffer) << ','
+
+      when ["mediawiki", "page", "revision", "timestamp"]
+        @output << '"timestamp": ' << Yajl::Encoder.encode(@char_buffer) << ','
+
+      when ["mediawiki", "page", "revision", "id"]
+        @output << '"_id": "' << @article_id << "-" << @char_buffer << '",'
+        # @output << '"revision_id": "' << @char_buffer << '",'
+
+      when ["mediawiki", "page", "revision", "text"]
         @output << '"text": ' << Yajl::Encoder.encode(@char_buffer)
-    
-        @char_buffer = ""
+
       end
 
+      @char_buffer = ""
       @element_path.pop
     end
 
     def characters(data)
-      case @element_path
-      when ["mediawiki", "page", "id"]
-        @article_id = data
-      when ["mediawiki", "page", "title"]
-        @output << '"title": ' << Yajl::Encoder.encode(data) << ','
-      when ["mediawiki", "page", "revision", "timestamp"]
-        @output << '"timestamp": "' << data << '",'
-      when ["mediawiki", "page", "revision", "id"]
-        @output << '"_id": "' << @article_id << "-" << data << '",'
-        @output << '"revision_id": "' << data << '",'
-      when ["mediawiki", "page", "revision", "text"]
-        @char_buffer << data
-      end
+      @char_buffer << data if [ ["mediawiki", "page", "id"],
+                                ["mediawiki", "page", "title"],
+                                ["mediawiki", "page", "revision", "timestamp"],
+                                ["mediawiki", "page", "revision", "id"],
+                                ["mediawiki", "page", "revision", "text"]].include? @element_path
     end
-
-
+ 
     def start_article
       @page_count = @page_count + 1
 
