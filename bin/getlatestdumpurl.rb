@@ -25,11 +25,9 @@ require "rubygems"
 require "nokogiri"
 require "open-uri"
 
-feed_url = 'http://download.wikimedia.org/dewiki/latest/dewiki-latest-pages-articles.xml.bz2-rss.xml'
-wiki_lang = "dewiki"
+wiki_lang = ARGV[0] || "dewiki"
+feed_url = "http://download.wikimedia.org/#{wiki_lang}/latest/#{wiki_lang}-latest-pages-articles.xml.bz2-rss.xml"
 
 latest_dump_date = Nokogiri::XML(open(feed_url)).xpath('//item/link').children.first.text.match(/\d+/)[0]
 
-dump_filename="#{wiki_lang}-#{latest_dump_date}-pages-articles.xml.bz2"
-
-puts "http://download.wikimedia.org/#{wiki_lang}/#{latest_dump_date}/#{dump_filename}"
+puts "http://download.wikimedia.org/#{wiki_lang}/#{latest_dump_date}/#{wiki_lang}-#{latest_dump_date}-pages-articles.xml.bz2"

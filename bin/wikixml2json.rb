@@ -21,54 +21,38 @@
 # THE SOFTWARE.
 
 # TODO
-# - better command line option parsing
-# - zero-padded IDs?
 # - auslagern des "bundling-codes" in eine eigene anwendung?
 
 require "rubygems"
 
 require "nokogiri"
 require "yajl"
+require "trollop"
 
 require "lib/mediawiki_to_json_parser"
 
-# reading ARGVs and/or setting defaults
-input_file = ARGV[0] || "--" # use stdin for default
-max_chunk_size = (ARGV[1] || 5_000_000).to_i  # try to limit document bundles to X bytes
-max_pages = (ARGV[2] || -1).to_i  # -1 means all pages
-bundle_output = ARGV[3] || "data_bundles/%07i.json" # give printf-style pattern for output
-
-$log_fd = $stdout
-
-def log(message)
-  $log_fd.puts message
+# gather command line options
+opts = Trollop.options do
+  opt :input_file, "Wikipedia XML dump file (- for stdin)", :type => String, :default => "-" 
+  opt :max_chunk_size, "Target size of output bundles", :type => :int,   :default => 5_000_000
+  opt :max_pages, "Number of articles to be imported (-1 for all)", :type => :int, :default => -1
+  opt :skip_pages, "Number of articles to be skipped", :type => :int, :default => 0
+  opt :no_bundles, "Switch off bundling, will output each doc line by line to stdout", :default => false
+  opt :bundle_output, "printf-stype pattern for bundle output (- for stdout)", :type => String, :default => "data_bundles/%07i.json"
+  opt :logfile, "Logfile", :type => String, :default => "wikixml2json.log"
 end
-
-if bundle_output == "--"
-  $log_fd = File.open("wikixml2json.log", "a")
-end
-
-# be a little bit chatty :)
-if input_file == "--"
-  log "Using $stdin for input"
-else
-  log "Input #{input_file}"
-end
-
-log "Trying to limit size of chunks to #{max_chunk_size} bytes"
-log "Using output schema #{bundle_output}"
-log max_pages > 0 ? "Parsing up to #{max_pages} pages" : "Parsing all pages"
 
 # setting up the parser
-mediawikiparser = MediaWikiToJSONParser.new($log_fd, max_chunk_size, max_pages, bundle_output)
+mediawikiparser = MediaWikiToJSONParser.new(File.open(opts[:logfile], "a"), opts)
 parser = Nokogiri::XML::SAX::Parser.new(mediawikiparser)
 
 # Send some XML to the parser :)
-if input_file == "--"
-  parser.parse_io($stdin, "UTF-8")
+if opts[:input_file] == "-"
+  parser.parse_io(STDIN, "UTF-8")
 else
-  parser.parse_file(input_file)
+  parser.parse_file(opts[:input_file])
 end
 
-# Ensure, that the last bundle is properly written (this is ugly I know)
-mediawikiparser.end_bundle
+# Ensure, that the last bundle is properly written (this is ugly I know, but
+# the max_pages options). Is this needed anymore?
+mediawikiparser.end_bundle unless opts[:bundle_output] == '-'
