@@ -1,3 +1,4 @@
+.bundle/
 .DS_Store
 data/
 data_processed/
