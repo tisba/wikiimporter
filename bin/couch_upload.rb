@@ -22,7 +22,7 @@
 
 require "rubygems"
 require "trollop"
-require "pp"
+
 require "stringio"
 require "logger"
 
@@ -41,6 +41,7 @@ class CouchUpload
     else
       Logger.new(opts[:logfile])
     end
+    @log.level = Logger::INFO
   end
 
   def bulk_upload(payload)
