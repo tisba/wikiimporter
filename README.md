@@ -1,5 +1,5 @@
 # WikiImporter
-WikiImporter (what a lame name!) is a set of tools for importing Wikipedia dumps to CouchDB. The parser currently only extracts the page ID, title, text, version ID and the timestamp of the latest change. For CouchDB document IDs currently `<page_id>-<revision_id>` is used.
+WikiImporter (what a lame name!) is a set of tools for importing Wikipedia dumps to CouchDB. The parser currently only extracts the page ID, title, text, version ID and the timestamp of the latest change. For CouchDB document IDs currently the page title is used.
 
 ## What's in the box?
 WikiImporter consists of 4 tools:

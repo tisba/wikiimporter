@@ -63,17 +63,21 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
     when :"mediawiki,page"
       end_article
     when :"mediawiki,page,id"
-      @article_id = @char_buffer.string.strip
-      @output << '"page_id": "' << @article_id << '",'
+      # @article_id = @char_buffer.string.strip
+      # @output << '"page_id": "' << @article_id << '",'
+      @output << '"page_id": "' << @char_buffer.string.strip << '",'
 
     when :"mediawiki,page,title"
-      @output << '"title": ' << Yajl::Encoder.encode(@char_buffer.string) << ','
+      @article_id = Yajl::Encoder.encode(@char_buffer.string)
+      @output << '"title": ' << @article_id << ','
+      @output << '"_id": ' << @article_id << ','
+      # @output << '"title": ' << Yajl::Encoder.encode(@char_buffer.string) << ','
 
     when :"mediawiki,page,revision,timestamp"
       @output << '"timestamp": ' << Yajl::Encoder.encode(@char_buffer.string) << ','
 
     when :"mediawiki,page,revision,id"
-      @output << '"_id": "' << @article_id << "-" << @char_buffer.string << '",'
+      # @output << '"_id": "' << @article_id << "-" << @char_buffer.string << '",'
       @output << '"revision_id": "' << @char_buffer.string << '",'
 
     when :"mediawiki,page,revision,text"
