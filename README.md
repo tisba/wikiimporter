@@ -1,63 +1,24 @@
-# Wikipedia on CouchDB
-Type...
+## What's in the box?
+WikiImporter consists of 4 tools:
 
-    ./mediawiki2couch.sh
+* `./bin/getlatestdumpurl.rb`, a helper to get the URL to the latest Wikipedia dump
+* `./bin/wikixml2json.rb`, a parser for processing the XML dump and spitting out JSON objects (separated by newlines)
+* `./bin/couch_upload.rb`, a tool for reading JSON objects from STDIN, batching them and upload them to CouchDB
+* The fourth tool is `./bin/wiki2couch.sh`, which just invokes the other three tools and chaining them together. It requires two parameters: 1) the wiki language you want to import, 2) the full target CouchDB URL.
 
-...wait... and have fun!
+Try `--help` on `./bin/wikixml2json.rb` and `./bin/couch_upload.rb` for getting more information.
 
-    curl --silent `ruby bin/getlatestdumpurl.rb` | bzcat | ruby bin/wikixml2json.rb -- 5000000 -1
-
-    bzcat data/dewiki-latest-pages-articles.xml.bz2 | ruby bin/wikixml2json.rb -- 1_000_000 100_000 -- | ./bin/couch_upload.rb
-
-get the latest dump
-
-    curl `ruby bin/getlatestdumpurl.rb` -O
+`./bin/getlatestdumpurl.rb` takes one optional parameter which determines the language of the dump you want to download. Examples: `dewiki`, `enwiki`.
 
 
-    time find data_bundles -name \*json -exec curl -\# -w "%{time_total} sec\n" -T {} -X POST http://localhost:5984/wikicouch/_bulk_docs > couch_upload.log \;
+## Seperate steps, more control
+This is how you import the first 10000 articles from the German Wikipedia to your CouchDB running at `http://localhost:5984/`:
 
-# TODOs
-- Add options to Scripts :)
-  - Couch-URL
-
-# komplett transformation und import
-
-
-    couchdb='http://localhost:5984/wikicouch'
+    curl -X DELETE http://localhost:5984/wiki
+    curl -X PUT http://localhost:5984/wiki
     
-    rm -rf data_bundles
-    mkdir data_bundles
+    curl `./bin/getlatestdumpurl.rb dewiki`
     
-    curl -X DELETE ${couchdb}
-    curl -X PUT ${couchdb}
-
-    time bzcat data/dewiki-20100206-pages-articles.xml.bz2 | ruby bin/wikixml2json.rb
-
-    # clear the upload log, do the upload and fetch processing times for each chunk
-    rm couch_upload.log
-    time find data_bundles -name \*json -exec curl -\# -w "%{time_total} sec\n" -T {} -X POST http://localhost:5984/wikicouch/_bulk_docs > couch_upload.log \;
-    grep -E '^[0-9]+\.[0-9]+ sec$' couch_upload.log 
-
-
-# Test
-
-
-
-    maxpages=1000
-    couchdb='http://localhost:5984/wikicouch'
-    rm -rf data_budles/
-    mkdir -p data_bundles/alt
-    mkdir -p data_bundles/neu
-    bzcat data/dewiki-20091223-pages-articles.xml.bz2 | ./bin/wikixml2json.rb -- 5_000_000 $maxpages "data_bundles/alt/%07i.json"
-    bzcat data/dewiki-20100206-pages-articles.xml.bz2 | ./bin/wikixml2json.rb -- 5_000_000 $maxpages "data_bundles/neu/%07i.json"
-
-    curl -X DELETE ${couchdb}
-    curl -X PUT ${couchdb}
-
-    time find data_bundles/alt/ -name \*json -exec curl -\# -w "%{time_total} sec" -T {} -X POST ${couchdb}/_bulk_docs > couch_upload.log \;
-    time find data_bundles/neu/ -name \*json -exec curl -\# -w "%{time_total} sec" -T {} -X POST ${couchdb}/_bulk_docs > couch_upload.log \;
-
-    curl -X GET ${couchdb}/_design/wiki/_view/by_timestamp
+    bzcat data/dewiki-20100727-pages-articles.xml.bz2 | ./bin/wikixml2json.rb --max-pages 10000 > data_processed/articles.json
     
-    
-    curl -X GET 'http://localhost:5984/wikicouch/_design/wiki/_view/by_title?endkey=\[%22Zusammenhang%20von%20Graphen%22\]&startkey=\[%22Zusammenhang%20von%20Graphen%22,{}\]&descending=true&limit=1'
+    cat data_processed/articles.json | ./bin/couch_upload.rb --couch-url "http://localhost:5984/wiki" --max-chunk-size 1500000
