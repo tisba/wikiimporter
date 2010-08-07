@@ -1,3 +1,6 @@
+# WikiImporter
+WikiImporter (what a lame name!) is a set of tools for importing Wikipedia dumps to CouchDB. The parser currently only extracts the page ID, title, text, version ID and the timestamp of the latest change. For CouchDB document IDs currently `<page_id>-<revision_id>` is used.
+
 ## What's in the box?
 WikiImporter consists of 4 tools:
 
@@ -11,14 +14,14 @@ Try `--help` on `./bin/wikixml2json.rb` and `./bin/couch_upload.rb` for getting 
 `./bin/getlatestdumpurl.rb` takes one optional parameter which determines the language of the dump you want to download. Examples: `dewiki`, `enwiki`.
 
 
-## Seperate steps, more control
+## Separated steps, more control
 This is how you import the first 10000 articles from the German Wikipedia to your CouchDB running at `http://localhost:5984/`:
 
     curl -X DELETE http://localhost:5984/wiki
     curl -X PUT http://localhost:5984/wiki
     
-    curl `./bin/getlatestdumpurl.rb dewiki`
+    curl `./bin/getlatestdumpurl.rb dewiki` -o data/dewiki.xml.bz2
     
-    bzcat data/dewiki-20100727-pages-articles.xml.bz2 | ./bin/wikixml2json.rb --max-pages 10000 > data_processed/articles.json
+    bzcat data/dewiki.xml.bz2 | ./bin/wikixml2json.rb --max-pages 10000 > data_processed/articles.json
     
     cat data_processed/articles.json | ./bin/couch_upload.rb --couch-url "http://localhost:5984/wiki" --max-chunk-size 1500000
