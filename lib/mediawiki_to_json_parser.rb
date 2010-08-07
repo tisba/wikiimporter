@@ -24,17 +24,11 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
   def initialize(logger, opts)
     @page_count = 0
 
-    @chunk_page_count = 0
-    
-    @do_bundle = !opts[:no_bundles]
+    @output = STDOUT
 
-    @output = (!@do_bundle || opts[:bundle_output] == "-") ? STDOUT : nil
-    @bundle_output = opts[:bundle_output] || "data_bundles/%07i.json"
-    
-    @max_chunk_size = opts[:max_chunk_size]
     @max_pages = opts[:max_pages]
     
-    @logger = logger   
+    @logger = logger
     
     @element_path = []
     @element_path_sym = nil
@@ -46,8 +40,6 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
       log "Input #{opts[:input_file]}"
     end
 
-    log "Trying to limit size of chunks to #{opts[:max_chunk_size]} bytes"
-    log "Using output schema #{opts[:bundle_output]}"
     log opts[:max_pages] > 0 ? "Parsing up to #{opts[:max_pages]} pages" : "Parsing all pages"
   end
 
@@ -85,8 +77,8 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
       @output << '"revision_id": "' << @char_buffer.string << '",'
 
     when :"mediawiki,page,revision,text"
-      # @output << '"text": ' << Yajl::Encoder.encode(@char_buffer.string)
-      @output << '"text": ' << '"........"'
+      @output << '"text": ' << Yajl::Encoder.encode(@char_buffer.string)
+      # @output << '"text": ' << '"........"'
     end
 
     @element_path.pop
@@ -101,56 +93,18 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
 
   def start_article
     @page_count = @page_count + 1
-
-    if @do_bundle
-      start_bundle if @chunk_page_count == 0
-      @output << "," if @chunk_page_count > 0
-    end
     @output << "{"
   end
   def end_article
     @output << "}"
-    @chunk_page_count = @chunk_page_count + 1
-    
-    if @do_bundle && @output.pos >= @max_chunk_size
-      end_bundle
-    else
-      @output << "\n"
-    end
+    @output << "\n"
   end
-
-
-
-  def start_bundle
-    if @bundle_output != "-"
-      filename = @bundle_output % @page_count
-      log "[#{Time.now.strftime("%Y-%m-%d %H:%M:%S")}] Starting new bundle: #{filename}"
-      @output = File.new(filename, "w")
-    end
-    @output << '{"docs": ['
-    @chunk_page_count = 0
-  end
-  def end_bundle
-    @output << ']}'
-    @chunk_page_count = 0
-    unless @bundle_output == "-" # only close and reset fd when using a file
-      @output.close
-      @output = nil
-    end
-  end
-
-
-
 
   def log(message)
-    @logger.puts message
+    @logger.debug message
   end
 
-
   def abort_check
-    if @page_count >= @max_pages
-      end_bundle unless @bundle_output == "-"
-      exit
-    end
+    exit if @page_count >= @max_pages
   end
 end

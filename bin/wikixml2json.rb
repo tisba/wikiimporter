@@ -20,9 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# TODO
-# - auslagern des "bundling-codes" in eine eigene anwendung?
-
 require "rubygems"
 
 require "nokogiri"
@@ -31,19 +28,19 @@ require "trollop"
 
 require "lib/mediawiki_to_json_parser"
 
+require "logger"
+
 # gather command line options
 opts = Trollop.options do
-  opt :input_file, "Wikipedia XML dump file (- for stdin)", :type => String, :default => "-" 
-  opt :max_chunk_size, "Target size of output bundles", :type => :int,   :default => 5_000_000
+  opt :input_file, "Wikipedia XML dump file (- for STDIN)", :type => String, :default => "-" 
+  opt :max_chunk_size, "Target size of output bundles", :type => :int, :default => 5_000_000
   opt :max_pages, "Number of articles to be imported (-1 for all)", :type => :int, :default => -1
   opt :skip_pages, "Number of articles to be skipped", :type => :int, :default => 0
-  opt :no_bundles, "Switch off bundling, will output each doc line by line to stdout", :default => false
-  opt :bundle_output, "printf-stype pattern for bundle output (- for stdout)", :type => String, :default => "data_bundles/%07i.json"
-  opt :logfile, "Logfile", :type => String, :default => "wikixml2json.log"
+  opt :logfile, "Logfile", :type => String, :default => "log/wikixml2json.log"
 end
 
 # setting up the parser
-mediawikiparser = MediaWikiToJSONParser.new(File.open(opts[:logfile], "a"), opts)
+mediawikiparser = MediaWikiToJSONParser.new(Logger.new(opts[:logfile]), opts)
 parser = Nokogiri::XML::SAX::Parser.new(mediawikiparser)
 
 # Send some XML to the parser :)
@@ -52,7 +49,3 @@ if opts[:input_file] == "-"
 else
   parser.parse_file(opts[:input_file])
 end
-
-# Ensure, that the last bundle is properly written (this is ugly I know, but
-# the max_pages options). Is this needed anymore?
-mediawikiparser.end_bundle unless opts[:bundle_output] == '-'

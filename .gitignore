@@ -1,4 +1,4 @@
 .DS_Store
 data/
-data_bundles/
+data_processed/
 *.log
