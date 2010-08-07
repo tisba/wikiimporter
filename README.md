@@ -25,3 +25,6 @@ This is how you import the first 10000 articles from the German Wikipedia to you
     bzcat data/dewiki.xml.bz2 | ./bin/wikixml2json.rb --max-pages 10000 > data_processed/articles.json
     
     cat data_processed/articles.json | ./bin/couch_upload.rb --couch-url "http://localhost:5984/wiki" --max-chunk-size 1500000
+
+## Anything else?
+If've written a show function (a **very** poor wiki2html transformation) and a few views to play around with. Install them by: `cd wiki && couchapp push http://localhost:5984/wiki`.
