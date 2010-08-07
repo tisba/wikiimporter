@@ -33,9 +33,8 @@ require "logger"
 # gather command line options
 opts = Trollop.options do
   opt :input_file, "Wikipedia XML dump file (- for STDIN)", :type => String, :default => "-" 
-  opt :max_chunk_size, "Target size of output bundles", :type => :int, :default => 5_000_000
   opt :max_pages, "Number of articles to be imported (-1 for all)", :type => :int, :default => -1
-  opt :skip_pages, "Number of articles to be skipped", :type => :int, :default => 0
+  opt :skip_pages, "Number of articles to be skipped (NOT YET IMPLEMENTED)", :type => :int, :default => 0
   opt :logfile, "Logfile", :type => String, :default => "log/wikixml2json.log"
 end
 
