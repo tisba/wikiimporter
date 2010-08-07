@@ -35,7 +35,7 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
 
     # be a little bit chatty :)
     if opts[:input_file] == "-"
-      log "Using $stdin for input"
+      log "Using STDIN for input"
     else
       log "Input #{opts[:input_file]}"
     end
