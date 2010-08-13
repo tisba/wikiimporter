@@ -98,6 +98,7 @@ class MediaWikiToJSONParser < Nokogiri::XML::SAX::Document
   def start_article
     @page_count = @page_count + 1
     @output << "{"
+    @output << '"ruby_class":"Article",'
   end
   def end_article
     @output << "}"
