@@ -3,6 +3,8 @@
 [ -z "$1" ] && echo "Language to import missing!" && exit 1
 [ -z "$2" ] && echo "Target CouchDB missing!" && exit 1
 
+mkdir -p "log/"
+
 curl `./bin/getlatestdumpurl.rb $1` --silent | \
 bzcat | \
 ./bin/wikixml2json.rb | \
