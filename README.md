@@ -2,8 +2,9 @@
 First of all WikiImporter is a lame name! It is a set of tools for importing Wikipedia dumps to CouchDB. The parser currently only extracts the page ID, title, text, version ID and the timestamp of the latest change. For CouchDB document IDs currently the page title is used.
 
 ## Requirements
+To install the required dependencies just run:
 
-    gem install nokogiri trollop yajl-ruby
+    bundle install
 
 ## Getting started
 Try `./bin/wiki2couch.sh enwiki http://localhost:5984/enwiki` and have a look at what your Couch is doing :)
@@ -34,4 +35,4 @@ This is how you import the first 10000 articles from the German Wikipedia to you
     cat data_processed/articles.json | ./bin/couch_upload.rb --couch-url "http://localhost:5984/wiki" --max-chunk-size 1500000
 
 # Anything else?
-WikiImporter also comes with a fulltext view (for couchdb-lucene), a show function and a view to play around with. Install them by: `cd wiki && couchapp push http://localhost:5984/wiki`.
+WikiImporter also comes with a fulltext view (for couchdb-lucene), a show function and a view to play around with. Install them by: `cd wiki && couchapp push http://localhost:5984/enwiki`.
