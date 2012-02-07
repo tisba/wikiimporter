@@ -20,8 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require "rubygems"
-require "trollop"
+require File.expand_path('../../lib/boot', __FILE__)
 
 require "stringio"
 require "logger"

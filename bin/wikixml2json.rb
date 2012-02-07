@@ -20,11 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require "rubygems"
-
-require "nokogiri"
-require "yajl"
-require "trollop"
+require File.expand_path('../../lib/boot', __FILE__)
 
 require "lib/mediawiki_to_json_parser"
 

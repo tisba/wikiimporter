@@ -20,9 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require "rubygems"
+require File.expand_path('../../lib/boot', __FILE__)
 
-require "nokogiri"
 require "open-uri"
 
 wiki_lang = ARGV[0] || "dewiki"
