@@ -30,4 +30,4 @@ feed_url = "http://download.wikimedia.org/#{wiki_lang}/latest/#{wiki_lang}-lates
 
 latest_dump_date = Nokogiri::XML(open(feed_url)).xpath('//item/link').children.first.text.match(/\d+/)[0]
 
-puts "http://download.wikimedia.org/#{wiki_lang}/#{latest_dump_date}/#{wiki_lang}-#{latest_dump_date}-pages-articles.xml.bz2"
+puts "http://dumps.wikimedia.org/#{wiki_lang}/#{latest_dump_date}/#{wiki_lang}-#{latest_dump_date}-pages-articles.xml.bz2"
